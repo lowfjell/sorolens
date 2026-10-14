@@ -1,3 +1,13 @@
+// Package client is the Go client for the Sorolens API.
+//
+// Import it as:
+//
+//	import client "github.com/sorolens/sorolens/packages/go-client"
+//
+// The HTTP client is generated from docs/openapi.yaml into an internal
+// package. This package wraps it: [New] builds an [ApiClient] that sends the
+// API key on every request, and the request and response types the wrapper
+// uses are re-exported in types.go, so callers never import generated code.
 package client
 
 import (
@@ -5,13 +15,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	gen "github.com/sorolens/sorolens/packages/go-client/internal/client"
 )
 
 // ApiClient is an opinionated, typed wrapper over the generated oapi-codegen
 // client. It injects the API key into every outgoing request and exposes the
 // high-level endpoints as Go functions returning strongly-typed models.
 type ApiClient struct {
-	generated *ClientWithResponses
+	generated *gen.ClientWithResponses
 	apiKey    string
 }
 
@@ -22,14 +34,14 @@ type ApiClient struct {
 // token on every request. Pass an optional *http.Client to override the
 // default transport.
 func New(server, apiKey string, httpClient *http.Client) (*ApiClient, error) {
-	opts := []ClientOption{}
+	opts := []gen.ClientOption{}
 	if apiKey != "" {
 		opts = append(opts, withBearerToken(apiKey))
 	}
 	if httpClient != nil {
-		opts = append(opts, WithHTTPClient(httpClient))
+		opts = append(opts, gen.WithHTTPClient(httpClient))
 	}
-	c, err := NewClientWithResponses(server, opts...)
+	c, err := gen.NewClientWithResponses(server, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("go-client: init: %w", err)
 	}
@@ -37,7 +49,9 @@ func New(server, apiKey string, httpClient *http.Client) (*ApiClient, error) {
 }
 
 // Generated exposes the full generated client (all endpoints including the
-// admin and role routes) for advanced callers.
+// admin and role routes) for advanced callers. Its method set follows the
+// OpenAPI spec and may change when the client is regenerated; the methods on
+// ApiClient are the stable surface.
 func (c *ApiClient) Generated() *ClientWithResponses {
 	return c.generated
 }
@@ -96,8 +110,8 @@ func (c *ApiClient) GetContractSnapshot(ctx context.Context, id string, params *
 
 // withBearerToken returns a ClientOption that injects the API key as a bearer
 // token on every request.
-func withBearerToken(token string) ClientOption {
-	return WithRequestEditorFn(func(_ context.Context, req *http.Request) error {
+func withBearerToken(token string) gen.ClientOption {
+	return gen.WithRequestEditorFn(func(_ context.Context, req *http.Request) error {
 		req.Header.Set("Authorization", "Bearer "+token)
 		return nil
 	})

@@ -1,4 +1,4 @@
-module github.com/sorolens/go-client
+module github.com/sorolens/sorolens/packages/go-client
 
 go 1.26
 

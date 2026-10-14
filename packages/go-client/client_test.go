@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	gen "github.com/sorolens/sorolens/packages/go-client/internal/client"
 )
 
 // testServer returns an httptest.Server stubbing the Sorolens API surface.
@@ -240,7 +242,7 @@ func TestApiClient_Forecast(t *testing.T) {
 }
 
 func TestApiClient_SchemaEmbedded(t *testing.T) {
-	swagger, err := GetSwagger()
+	swagger, err := gen.GetSwagger()
 	if err != nil {
 		t.Fatalf("GetSwagger: %v", err)
 	}
